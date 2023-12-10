@@ -155,7 +155,7 @@ async def inline_query_handler(inline_query: types.InlineQuery, bot: Bot) -> Non
                     message_text=vxtiktok_link
                 ),
                 description=vxtiktok_link,
-                thumbnail_url="https://github.com/Z1xus/tiktok-to-vxtiktok/blob/f82838fdaec47e8e3fa423052c2489d0cbcf7a7b/assets/cooltent.webp",
+                thumbnail_url="https://zentimine.xyz/cooltent_wrin4z4U.webp",
             )
             await bot.answer_inline_query(
                 inline_query.id, results=[item], cache_time=30
@@ -171,7 +171,7 @@ async def inline_query_handler(inline_query: types.InlineQuery, bot: Bot) -> Non
                 message_text="❌ no valid link provided"
             ),
             description="this doesn't look like a tiktok link to me 🤨",
-            thumbnail_url="https://github.com/Z1xus/tiktok-to-vxtiktok/blob/f82838fdaec47e8e3fa423052c2489d0cbcf7a7b/assets/shrugtent.webp",
+            thumbnail_url="https://zentimine.xyz/shrugtent_h5Xe8ibm.webp",
         )
         await bot.answer_inline_query(inline_query.id, results=[item], cache_time=30)
 
