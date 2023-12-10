@@ -1,4 +1,9 @@
-## ![](assets/tiktok-to-vxtiktok.webp") tiktok-to-vxtiktok
+<p align="left">
+<img src="assets/tiktok-to-vxtiktok.webp"
+  width="128" height="128">
+</p>
+
+## tiktok-to-vxtiktok
 
 A Telegram Python bot that converts TikTok links to VxTikTok links
 
@@ -12,9 +17,9 @@ A Telegram Python bot that converts TikTok links to VxTikTok links
     <a href="https://www.codefactor.io/repository/github/z1xus/tiktok-to-vxtiktok">
         <img src="https://www.codefactor.io/repository/github/z1xus/tiktok-to-vxtiktok/badge" alt="CodeFactor" /></a>
     <a href="https://github.com/Z1xus/tiktok-to-vxtiktok/issues?q=is%3Aissue+is%3Aopen+" alt="GitHub issues">
-        <img src="https://img.shields.io/github/issues/z1xus/tiktok-to-vxtiktok">
+        <img src="https://img.shields.io/github/issues/z1xus/tiktok-to-vxtiktok"></a>
     <a href="https://github.com/Z1xus/tiktok-to-vxtiktok/pulls?q=is%3Apr+is%3Aopen+" alt="GitHub pull requests">
-        <img src="https://img.shields.io/github/issues-pr/z1xus/tiktok-to-vxtiktok">
+        <img src="https://img.shields.io/github/issues-pr/z1xus/tiktok-to-vxtiktok"></a>
 </p>
 
 Accepts both shortened and full TikTok links, works in group chats, PMs and inline.  
