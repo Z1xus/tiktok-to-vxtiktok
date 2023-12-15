@@ -1,6 +1,6 @@
 <p align="left">
 <img src="assets/tiktok-to-vxtiktok.webp"
-  width="128" height="128">
+  width="32" height="32">
 </p>
 
 ## tiktok-to-vxtiktok
