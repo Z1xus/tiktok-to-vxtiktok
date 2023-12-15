@@ -29,12 +29,6 @@ db = client.tiktokToVxtiktok
 chats_collection = db.chats
 
 
-async def get_redirected_url(url: str) -> str:
-    async with ClientSession() as session:
-        async with session.get(url) as response:
-            return str(response.url)
-
-
 @router.message(Command(commands=["start"]))
 async def command_start(message: types.Message, bot: Bot) -> None:
     await bot.send_message(
@@ -80,11 +74,23 @@ async def command_toggle(message: types.Message, bot: Bot) -> None:
     )
 
 
+tiktok_pattern = (
+    r"https?://(?:www\.|vm\.)tiktok\.com/(?:@[^/\s]+/video/|v/)?[0-9a-zA-Z]+"
+)
+
+
+async def convert_link_helper(original_link: str) -> Optional[str]:
+    match = re.match(tiktok_pattern, original_link)
+    if match:
+        tiktok_link = match.group(0)
+        return tiktok_link.replace("tiktok.com", "vxtiktok.com")
+    return None
+
+
 @router.message()
 async def convert_link(message: types.Message, bot: Bot) -> None:
-    tiktok_link = re.findall(
-        r"(https?://(?:www\.|vm\.)?tiktok\.com/[^\s]+)", message.text
-    )
+    tiktok_link = re.findall(tiktok_pattern, message.text)
+
     if not tiktok_link:
         if message.chat.type == "private" and re.findall(
             r"(https?://[^\s]+)", message.text
@@ -95,74 +101,70 @@ async def convert_link(message: types.Message, bot: Bot) -> None:
         return
 
     try:
-        redirected_url = (
-            tiktok_link[0]
-            if "www.tiktok.com" in tiktok_link[0]
-            else await get_redirected_url(tiktok_link[0])
-        )
-        vxtiktok_link = redirected_url.split("?")[0].replace(
-            "www.tiktok.com", "vxtiktok.com"
-        )
+        vxtiktok_link = await convert_link_helper(tiktok_link[0])
+        if vxtiktok_link:
+            if message.chat.type != "private":
+                chat_data = (
+                    await chats_collection.find_one({"chat_id": message.chat.id}) or {}
+                )
+                if chat_data.get("replace_toggle_state", False):
+                    try:
+                        await bot.delete_message(message.chat.id, message.message_id)
+                    except TelegramBadRequest:
+                        await bot.send_message(
+                            message.chat.id,
+                            "sorry, i have no permission to delete messages! ;'(\n"
+                            "please consider disabling replacing (/replace) or"
+                            "promoting the bot to admin",
+                        )
+                    except TelegramNotFound as e:
+                        logging.warning(
+                            f"Failed to delete message: {e} - chat_id={message.chat.id}, message_id={message.message_id}"
+                        )
+                        pass
 
-        if message.chat.type != "private":
-            chat_data = (
-                await chats_collection.find_one({"chat_id": message.chat.id}) or {}
-            )
-            if chat_data.get("replace_toggle_state", False):
-                try:
-                    await bot.delete_message(message.chat.id, message.message_id)
-                except TelegramBadRequest:
-                    await bot.send_message(
-                        message.chat.id,
-                        "sorry, i have no permission to delete messages! ;'(\n"
-                        "please consider disabling replacing (/replace) or"
-                        "promoting the bot to admin",
-                    )
-                except TelegramNotFound as e:
-                    logging.warning(
-                        f"Failed to delete message: {e} - chat_id={message.chat.id}, message_id={message.message_id}"
-                    )
-                    pass
-
-        await bot.send_message(message.chat.id, vxtiktok_link)
+            await bot.send_message(message.chat.id, vxtiktok_link)
     except Exception as e:
         logging.error(e)
         await bot.send_message(
             message.chat.id,
-            "oops, I failed to convert your tiktok link" "\ncontact the dev @z1xus",
+            "oops, I failed to convert your tiktok link \ncontact the dev @z1xus",
         )
 
 
 @router.inline_query()
 async def inline_query_handler(inline_query: types.InlineQuery, bot: Bot) -> None:
-    tiktok_link = re.findall(
-        r"(https?://(?:www\.|vm\.)?tiktok\.com/[^\s]+)", inline_query.query
-    )
+    tiktok_link = re.findall(tiktok_pattern, inline_query.query)
     if tiktok_link:
         try:
-            redirected_url = (
-                tiktok_link[0]
-                if "www.tiktok.com" in tiktok_link[0]
-                else await get_redirected_url(tiktok_link[0])
-            )
-            vxtiktok_link = redirected_url.split("?")[0].replace(
-                "www.tiktok.com", "vxtiktok.com"
-            )
+            vxtiktok_link = await convert_link_helper(tiktok_link[0])
+            if vxtiktok_link:
+                item = InlineQueryResultArticle(
+                    id="tiktok_link",
+                    title="converted Link",
+                    input_message_content=InputTextMessageContent(
+                        message_text=vxtiktok_link
+                    ),
+                    description=vxtiktok_link,
+                    thumbnail_url="https://zentimine.xyz/cooltent_wrin4z4U.webp",
+                )
+                await bot.answer_inline_query(
+                    inline_query.id, results=[item], cache_time=30
+                )
+        except Exception as e:
+            logging.error(e)
             item = InlineQueryResultArticle(
-                id="tiktok_link",
-                title="converted link",
+                id="error",
+                title="error",
                 input_message_content=InputTextMessageContent(
-                    message_text=vxtiktok_link
+                    message_text="oops, something went wrong\n try again later"
                 ),
-                description=vxtiktok_link,
-                thumbnail_url="https://zentimine.xyz/cooltent_wrin4z4U.webp",
+                description="error converting link ;'(",
+                thumbnail_url="https://zentimine.xyz/sadtent_HUtm5TEW.webp",
             )
             await bot.answer_inline_query(
                 inline_query.id, results=[item], cache_time=30
             )
-        except Exception as e:
-            logging.error(e)
-            await bot.answer_inline_query(inline_query.id, results=[], cache_time=30)
     else:
         item = InlineQueryResultArticle(
             id="not_valid",
@@ -170,7 +172,7 @@ async def inline_query_handler(inline_query: types.InlineQuery, bot: Bot) -> Non
             input_message_content=InputTextMessageContent(
                 message_text="❌ no valid link provided"
             ),
-            description="this doesn't look like a tiktok link to me 🤨",
+            description="this doesnt look like a tiktok link to me 🤨",
             thumbnail_url="https://zentimine.xyz/shrugtent_h5Xe8ibm.webp",
         )
         await bot.answer_inline_query(inline_query.id, results=[item], cache_time=30)
@@ -184,11 +186,11 @@ async def main():
     me = await bot.get_me()
     print(f"Logged in as @{me.username} (ID: {me.id})")
 
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, handle_signals=False)
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("Ctrl+C detected, exiting...")
+        print("\nCtrl+C detected, exiting...")
